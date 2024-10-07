@@ -1,0 +1,42 @@
+# This document was created by PyBEL v0.15.5 and bel-resources v0.0.3 on Thu Oct  3 13:55:43 2024
+
+################################################################################
+#| Metadata
+################################################################################
+
+SET DOCUMENT Name = "test"
+SET DOCUMENT Version = "20241003"
+SET DOCUMENT Description = "Graph generated with the cd2bel tool"
+
+################################################################################
+#| Namespaces
+################################################################################
+
+# Enumerated Namespaces
+# ---------------------
+DEFINE NAMESPACE GO AS URL "https://raw.githubusercontent.com/pharmacome/conso/d9d270e11aac480542c412d4222983a5f042b8ae/external/go-names.belns"
+
+
+################################################################################
+#| Statements
+################################################################################
+###############################################
+
+SET Citation = {"pubmed", "29048466"}
+SET SupportingText = "Automatically added by PyBEL"
+rxn(reactants(p(HGNC:BCL2, location(GO:000000))), products(p(HGNC:BCL2))) hasReactant p(HGNC:BCL2)
+rxn(reactants(p(HGNC:BCL2)), products(p(HGNC:BCL2))) hasProduct p(HGNC:BCL2)
+rxn(reactants(p(HGNC:TP53)), products(p(HGNC:TP53))) hasReactant p(HGNC:TP53)
+rxn(reactants(p(HGNC:TP53)), products(p(HGNC:TP53))) hasProduct p(HGNC:TP53)
+rxn(reactants(p(HGNC:MAP2K7)), products(p(HGNC:MAP2K7))) hasReactant p(HGNC:MAP2K7)
+rxn(reactants(p(HGNC:MAP2K7)), products(p(HGNC:MAP2K7))) hasProduct p(HGNC:MAP2K7)
+rxn(reactants(p(HGNC:MAP2K4)), products(p(HGNC:MAP2K4))) hasReactant p(HGNC:MAP2K4)
+rxn(reactants(p(HGNC:MAP2K4)), products(p(HGNC:MAP2K4))) hasProduct p(HGNC:MAP2K4)
+rxn(reactants(p(HGNC:ATF2)), products(p(HGNC:ATF2))) hasReactant p(HGNC:ATF2)
+rxn(reactants(p(HGNC:ATF2)), products(p(HGNC:ATF2))) hasProduct p(HGNC:ATF2)
+p(ncbigene:1489674)
+p(uniprot:P59633)
+p(ncbigene:1489669)
+p(HGNC:S)
+UNSET SupportingText
+UNSET Citation

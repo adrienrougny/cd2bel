@@ -1,0 +1,1194 @@
+[
+  {
+    "numberVerification": [
+      {
+        "longNumber": 281474976710655
+      }
+    ]
+  },
+  {
+    "metaData": [
+      {
+        "name": "@context",
+        "elementCount": 1,
+        "lastUpdate": 1727689152.28839,
+        "consistencyGroup": 1,
+        "properties": [],
+        "version": "1.0"
+      },
+      {
+        "name": "context_legend",
+        "elementCount": 0,
+        "lastUpdate": 1727689152.288391,
+        "consistencyGroup": 1,
+        "properties": [],
+        "version": "1.0"
+      },
+      {
+        "name": "annotation_lists",
+        "elementCount": 0,
+        "lastUpdate": 1727689152.2883914,
+        "consistencyGroup": 1,
+        "properties": [],
+        "version": "1.0"
+      },
+      {
+        "name": "networkAttributes",
+        "elementCount": 3,
+        "lastUpdate": 1727689152.2883916,
+        "consistencyGroup": 1,
+        "properties": [],
+        "version": "1.0"
+      },
+      {
+        "name": "nodes",
+        "elementCount": 31,
+        "lastUpdate": 1727689152.2883918,
+        "consistencyGroup": 1,
+        "properties": [],
+        "version": "1.0",
+        "idCounter": 31
+      },
+      {
+        "name": "nodeAttributes",
+        "elementCount": 72,
+        "lastUpdate": 1727689152.2883925,
+        "consistencyGroup": 1,
+        "properties": [],
+        "version": "1.0"
+      },
+      {
+        "name": "edges",
+        "elementCount": 31,
+        "lastUpdate": 1727689152.2883928,
+        "consistencyGroup": 1,
+        "properties": [],
+        "version": "1.0",
+        "idCounter": 31
+      },
+      {
+        "name": "edgeAttributes",
+        "elementCount": 62,
+        "lastUpdate": 1727689152.2883933,
+        "consistencyGroup": 1,
+        "properties": [],
+        "version": "1.0"
+      }
+    ]
+  },
+  {
+    "@context": [
+      {}
+    ]
+  },
+  {
+    "context_legend": []
+  },
+  {
+    "annotation_lists": []
+  },
+  {
+    "networkAttributes": [
+      {
+        "n": "ndex:sourceFormat",
+        "v": "PyBEL"
+      },
+      {
+        "n": "name",
+        "v": "test"
+      },
+      {
+        "n": "description",
+        "v": "Graph generated with the cd2bel tool"
+      }
+    ]
+  },
+  {
+    "nodes": [
+      {
+        "@id": 0,
+        "n": "HGNC:AKT1",
+        "r": "HGNC:AKT1"
+      },
+      {
+        "@id": 1,
+        "n": "HGNC:APAF1",
+        "r": "HGNC:APAF1"
+      },
+      {
+        "@id": 2,
+        "n": "HGNC:BAD",
+        "r": "HGNC:BAD"
+      },
+      {
+        "@id": 3,
+        "n": "HGNC:BAX",
+        "r": "HGNC:BAX"
+      },
+      {
+        "@id": 4,
+        "n": "HGNC:BID",
+        "r": "HGNC:BID"
+      },
+      {
+        "@id": 5,
+        "n": "HGNC:CASP3",
+        "r": "HGNC:CASP3"
+      },
+      {
+        "@id": 6,
+        "n": "HGNC:CASP7",
+        "r": "HGNC:CASP7"
+      },
+      {
+        "@id": 7,
+        "n": "HGNC:CASP8",
+        "r": "HGNC:CASP8"
+      },
+      {
+        "@id": 8,
+        "n": "HGNC:CASP9",
+        "r": "HGNC:CASP9"
+      },
+      {
+        "@id": 9,
+        "n": "HGNC:CYCS",
+        "r": "HGNC:CYCS"
+      },
+      {
+        "@id": 10,
+        "n": "HGNC:E",
+        "r": "HGNC:E"
+      },
+      {
+        "@id": 11,
+        "n": "HGNC:FADD",
+        "r": "HGNC:FADD"
+      },
+      {
+        "@id": 12,
+        "n": "HGNC:FAS",
+        "r": "HGNC:FAS"
+      },
+      {
+        "@id": 13,
+        "n": "HGNC:FASLG",
+        "r": "HGNC:FASLG"
+      },
+      {
+        "@id": 14,
+        "n": "HGNC:MAPK14",
+        "r": "HGNC:MAPK14"
+      },
+      {
+        "@id": 15,
+        "n": "HGNC:N",
+        "r": "HGNC:N"
+      },
+      {
+        "@id": 16,
+        "n": "HGNC:ORF7a",
+        "r": "HGNC:ORF7a"
+      },
+      {
+        "@id": 17,
+        "n": "HGNC:S",
+        "r": "HGNC:S"
+      },
+      {
+        "@id": 18,
+        "n": "HGNC:TNF",
+        "r": "HGNC:TNF"
+      },
+      {
+        "@id": 19,
+        "n": "HGNC:TNFRSF1A",
+        "r": "HGNC:TNFRSF1A"
+      },
+      {
+        "@id": 20,
+        "n": "HGNC:TRADD",
+        "r": "HGNC:TRADD"
+      },
+      {
+        "@id": 21,
+        "n": "rxn(reactants(p(HGNC:AKT1)), products(p(HGNC:AKT1)))"
+      },
+      {
+        "@id": 22,
+        "n": "rxn(reactants(p(HGNC:BAD)), products(p(HGNC:BAD)))"
+      },
+      {
+        "@id": 23,
+        "n": "rxn(reactants(p(HGNC:BAX)), products(p(HGNC:BAX)))"
+      },
+      {
+        "@id": 24,
+        "n": "rxn(reactants(p(HGNC:BID)), products(p(HGNC:BID)))"
+      },
+      {
+        "@id": 25,
+        "n": "rxn(reactants(p(HGNC:CASP3)), products(p(HGNC:CASP3)))"
+      },
+      {
+        "@id": 26,
+        "n": "rxn(reactants(p(HGNC:CASP7)), products(p(HGNC:CASP7)))"
+      },
+      {
+        "@id": 27,
+        "n": "rxn(reactants(p(HGNC:CASP8)), products(p(HGNC:CASP8)))"
+      },
+      {
+        "@id": 28,
+        "n": "rxn(reactants(p(HGNC:CASP9)), products(p(HGNC:CASP9)))"
+      },
+      {
+        "@id": 29,
+        "n": "rxn(reactants(p(HGNC:FADD)), products(p(HGNC:FADD)))"
+      },
+      {
+        "@id": 30,
+        "n": "rxn(reactants(p(HGNC:MAPK14)), products(p(HGNC:MAPK14)))"
+      }
+    ]
+  },
+  {
+    "nodeAttributes": [
+      {
+        "po": 0,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 0,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "AKT1"
+        }
+      },
+      {
+        "po": 1,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 1,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "APAF1"
+        }
+      },
+      {
+        "po": 2,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 2,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "BAD"
+        }
+      },
+      {
+        "po": 3,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 3,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "BAX"
+        }
+      },
+      {
+        "po": 4,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 4,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "BID"
+        }
+      },
+      {
+        "po": 5,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 5,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "CASP3"
+        }
+      },
+      {
+        "po": 6,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 6,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "CASP7"
+        }
+      },
+      {
+        "po": 7,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 7,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "CASP8"
+        }
+      },
+      {
+        "po": 8,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 8,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "CASP9"
+        }
+      },
+      {
+        "po": 9,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 9,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "CYCS"
+        }
+      },
+      {
+        "po": 10,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 10,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "E"
+        }
+      },
+      {
+        "po": 11,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 11,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "FADD"
+        }
+      },
+      {
+        "po": 12,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 12,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "FAS"
+        }
+      },
+      {
+        "po": 13,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 13,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "FASLG"
+        }
+      },
+      {
+        "po": 14,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 14,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "MAPK14"
+        }
+      },
+      {
+        "po": 15,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 15,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "N"
+        }
+      },
+      {
+        "po": 16,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 16,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "ORF7a"
+        }
+      },
+      {
+        "po": 17,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 17,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "S"
+        }
+      },
+      {
+        "po": 18,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 18,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "TNF"
+        }
+      },
+      {
+        "po": 19,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 19,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "TNFRSF1A"
+        }
+      },
+      {
+        "po": 20,
+        "n": "function",
+        "v": "Protein"
+      },
+      {
+        "po": 20,
+        "n": "concept",
+        "v": {
+          "namespace": "HGNC",
+          "identifier": "TRADD"
+        }
+      },
+      {
+        "po": 21,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 21,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"AKT1\"}}]"
+      },
+      {
+        "po": 21,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"AKT1\"}}]"
+      },
+      {
+        "po": 22,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 22,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"BAD\"}}]"
+      },
+      {
+        "po": 22,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"BAD\"}}]"
+      },
+      {
+        "po": 23,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 23,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"BAX\"}}]"
+      },
+      {
+        "po": 23,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"BAX\"}}]"
+      },
+      {
+        "po": 24,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 24,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"BID\"}}]"
+      },
+      {
+        "po": 24,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"BID\"}}]"
+      },
+      {
+        "po": 25,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 25,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"CASP3\"}}]"
+      },
+      {
+        "po": 25,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"CASP3\"}}]"
+      },
+      {
+        "po": 26,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 26,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"CASP7\"}}]"
+      },
+      {
+        "po": 26,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"CASP7\"}}]"
+      },
+      {
+        "po": 27,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 27,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"CASP8\"}}]"
+      },
+      {
+        "po": 27,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"CASP8\"}}]"
+      },
+      {
+        "po": 28,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 28,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"CASP9\"}}]"
+      },
+      {
+        "po": 28,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"CASP9\"}}]"
+      },
+      {
+        "po": 29,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 29,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"FADD\"}}]"
+      },
+      {
+        "po": 29,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"FADD\"}}]"
+      },
+      {
+        "po": 30,
+        "n": "function",
+        "v": "Reaction"
+      },
+      {
+        "po": 30,
+        "n": "reactants",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"MAPK14\"}}]"
+      },
+      {
+        "po": 30,
+        "n": "products",
+        "v": "[{\"function\": \"Protein\", \"concept\": {\"namespace\": \"HGNC\", \"identifier\": \"MAPK14\"}}]"
+      }
+    ]
+  },
+  {
+    "edges": [
+      {
+        "@id": 0,
+        "s": 10,
+        "t": 27,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 1,
+        "s": 10,
+        "t": 30,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 2,
+        "s": 8,
+        "t": 26,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 3,
+        "s": 8,
+        "t": 25,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 4,
+        "s": 4,
+        "t": 23,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 5,
+        "s": 7,
+        "t": 24,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 6,
+        "s": 7,
+        "t": 26,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 7,
+        "s": 7,
+        "t": 25,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 8,
+        "s": 0,
+        "t": 28,
+        "i": "decreases"
+      },
+      {
+        "@id": 9,
+        "s": 0,
+        "t": 22,
+        "i": "decreases"
+      },
+      {
+        "@id": 10,
+        "s": 11,
+        "t": 27,
+        "i": "directlyIncreases"
+      },
+      {
+        "@id": 11,
+        "s": 29,
+        "t": 11,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 12,
+        "s": 29,
+        "t": 11,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 13,
+        "s": 28,
+        "t": 8,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 14,
+        "s": 28,
+        "t": 8,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 15,
+        "s": 24,
+        "t": 4,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 16,
+        "s": 24,
+        "t": 4,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 17,
+        "s": 23,
+        "t": 3,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 18,
+        "s": 23,
+        "t": 3,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 19,
+        "s": 26,
+        "t": 6,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 20,
+        "s": 26,
+        "t": 6,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 21,
+        "s": 27,
+        "t": 7,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 22,
+        "s": 27,
+        "t": 7,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 23,
+        "s": 25,
+        "t": 5,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 24,
+        "s": 25,
+        "t": 5,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 25,
+        "s": 21,
+        "t": 0,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 26,
+        "s": 21,
+        "t": 0,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 27,
+        "s": 30,
+        "t": 14,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 28,
+        "s": 30,
+        "t": 14,
+        "i": "hasProduct"
+      },
+      {
+        "@id": 29,
+        "s": 22,
+        "t": 2,
+        "i": "hasReactant"
+      },
+      {
+        "@id": 30,
+        "s": 22,
+        "t": 2,
+        "i": "hasProduct"
+      }
+    ]
+  },
+  {
+    "edgeAttributes": [
+      {
+        "po": 0,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 0,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 0,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 0,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 0,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 0,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      },
+      {
+        "po": 1,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 1,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 1,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 1,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 1,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 1,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      },
+      {
+        "po": 2,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 2,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 2,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 2,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 2,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 2,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      },
+      {
+        "po": 3,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 3,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 3,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 3,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 3,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 3,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      },
+      {
+        "po": 4,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 4,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 4,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 4,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 4,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 4,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      },
+      {
+        "po": 5,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 5,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 5,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 5,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 5,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 5,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      },
+      {
+        "po": 6,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 6,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 6,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 6,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 6,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 6,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      },
+      {
+        "po": 7,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 7,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 7,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 7,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 7,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 7,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      },
+      {
+        "po": 8,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 8,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 8,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 8,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 9,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 9,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 9,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 9,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 10,
+        "n": "evidence",
+        "v": "test evidence"
+      },
+      {
+        "po": 10,
+        "n": "citation_namespace",
+        "v": "pubmed"
+      },
+      {
+        "po": 10,
+        "n": "citation_identifier",
+        "v": "test_citation"
+      },
+      {
+        "po": 10,
+        "n": "sourceModifier_modifier",
+        "v": "Activity"
+      },
+      {
+        "po": 10,
+        "n": "sourceModifier_effect_namespace",
+        "v": "go"
+      },
+      {
+        "po": 10,
+        "n": "sourceModifier_effect_identifier",
+        "v": "0003824"
+      }
+    ]
+  },
+  {
+    "status": [
+      {
+        "error": "",
+        "success": true
+      }
+    ]
+  }
+]
