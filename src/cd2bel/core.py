@@ -1,3 +1,5 @@
+import collections
+
 import momapy.celldesigner.core
 import momapy.celldesigner.io.celldesigner
 import momapy.io
@@ -9,39 +11,68 @@ import momapy_bel.io.bel
 CD_NAMESPACE = "CELLDESIGNER"
 PROTEIN_NAMESPACES = ["HGNC", "UNIPROT"]
 ABUNDANCE_NAMESPACES = ["CHEBI"]
+GENE_NAMESPACES = []
+RNA_NAMESPACES = []
+MICRORNA_NAMESPACES = []
 COMPLEX_NAMESPACES = []
+BIOLOGICAL_PROCESS_NAMESPACES = []
 LOCATION_NAMESPACES = []
+PUBLICATION_NAMESPACES = ["pubmed", "doi"]
 
 
 def cd_to_bel(input_file_path, output_file_path):
     cd_map = momapy.io.read(input_file_path)
     cd_model = cd_map.model
     cd_annotations = cd_map.map_element_to_annotations
-    bel_model = cd_model_to_bel_model(cd_model, cd_annotations)
-    bel_model = momapy.builder.object_from_builder(bel_model)
-    momapy.io.write(bel_model, output_file_path, "bel")
-    return bel_model
+    bel_model, bel_annotations = cd_model_to_bel_model(
+        cd_model, cd_annotations
+    )
+    momapy.io.write(
+        map_=bel_model,
+        output_file_path=output_file_path,
+        writer="bel",
+        annotations=bel_annotations,
+    )
+    return bel_model, bel_annotations
 
 
 def cd_model_to_bel_model(cd_model, cd_annotations):
     cd_element_to_bel_element = {}
     bel_model = momapy_bel.core.BELModelBuilder()
+    bel_annotations = collections.defaultdict(set)
     for cd_species in cd_model.species:
         _ = make_and_add_bel_element_from_cd_element(
-            cd_species, cd_annotations, bel_model, cd_element_to_bel_element
+            cd_species,
+            cd_annotations,
+            bel_model,
+            bel_annotations,
+            cd_element_to_bel_element,
         )
     for cd_reaction in cd_model.reactions:
         _ = make_and_add_bel_element_from_cd_element(
-            cd_reaction, cd_annotations, bel_model, cd_element_to_bel_element
+            cd_reaction,
+            cd_annotations,
+            bel_model,
+            bel_annotations,
+            cd_element_to_bel_element,
+        )
+    for cd_modulation in cd_model.modulations:
+        _ = make_and_add_bel_element_from_cd_element(
+            cd_modulation,
+            cd_annotations,
+            bel_model,
+            bel_annotations,
+            cd_element_to_bel_element,
         )
     bel_model = momapy.builder.object_from_builder(bel_model)
-    return bel_model
+    return bel_model, bel_annotations
 
 
 def make_and_add_location_from_cd_compartment(
     cd_compartment,
     cd_annotations,
     bel_model,
+    bel_annotations,
     cd_element_to_bel_element,
     super_cd_element,
     super_bel_element,
@@ -69,17 +100,66 @@ def make_and_add_location_from_cd_compartment(
     return bel_location
 
 
-def make_and_add_abundance_from_cd_species(
+def make_and_add_degraded_from_cd_species(
     cd_species,
     cd_annotations,
     bel_model,
+    bel_annotations,
     cd_element_to_bel_element,
     super_cd_element=None,
     super_bel_element=None,
 ):
-    bel_abundance = bel_model.new_element(momapy_bel.core.Abundance)
+    bel_abundance = generic_make_degraded_from_cd_species(
+        cd_species=cd_species,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    bel_model.statements.add(bel_abundance)
+    cd_element_to_bel_element[cd_species] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_abundance = generic_make_abundance_from_cd_species(
+        cd_species=cd_species,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    bel_model.statements.add(bel_abundance)
+    cd_element_to_bel_element[cd_species] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_biological_process_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_biological_process = bel_model.new_element(
+        momapy_bel.core.BiologicalProcess
+    )
     main_iri = get_main_annotation_iri_from_cd_element(
-        cd_species, cd_annotations, ABUNDANCE_NAMESPACES
+        cd_species, cd_annotations, BIOLOGICAL_PROCESS_NAMESPACES
     )
     if main_iri is not None:
         namespace, identifier = get_namespace_and_identifier_from_cd_iri(
@@ -89,19 +169,80 @@ def make_and_add_abundance_from_cd_species(
         namespace = CD_NAMESPACE
         identifier = cd_species.name
         identifier = get_normalized_identifier(identifier)
-    bel_abundance.namespace = namespace
-    bel_abundance.identifier = identifier
-    if cd_species.compartment is not None:
-        cd_compartment = cd_species.compartment
-        make_and_add_location_from_cd_compartment(
-            cd_compartment=cd_compartment,
-            cd_annotations=cd_annotations,
-            bel_model=bel_model,
-            cd_element_to_bel_element=cd_element_to_bel_element,
-            super_cd_element=cd_species,
-            super_bel_element=bel_abundance,
-        )
-    bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+    bel_biological_process.namespace = namespace
+    bel_biological_process.identifier = identifier
+    bel_biological_process = momapy.builder.object_from_builder(
+        bel_biological_process
+    )
+    bel_model.statements.add(bel_biological_process)
+    cd_element_to_bel_element[cd_species] = bel_biological_process
+    return bel_biological_process
+
+
+def make_and_add_gene_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_abundance = generic_make_gene_abundance_from_cd_species(
+        cd_species=cd_species,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    bel_model.statements.add(bel_abundance)
+    cd_element_to_bel_element[cd_species] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_rna_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_abundance = generic_make_rna_abundance_from_cd_species(
+        cd_species=cd_species,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    bel_model.statements.add(bel_abundance)
+    cd_element_to_bel_element[cd_species] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_microrna_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_abundance = generic_make_microrna_abundance_from_cd_species(
+        cd_species=cd_species,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
     bel_model.statements.add(bel_abundance)
     cd_element_to_bel_element[cd_species] = bel_abundance
     return bel_abundance
@@ -111,6 +252,7 @@ def make_and_add_modification_from_cd_modification(
     cd_modification,
     cd_annotations,
     bel_model,
+    bel_annotations,
     cd_element_to_bel_element,
     super_cd_element=None,
     super_bel_element=None,
@@ -134,10 +276,742 @@ def make_and_add_modification_from_cd_modification(
     return bel_modification
 
 
+def make_and_add_modification_from_cd_structural_state(
+    cd_structural_state,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_modification = bel_model.new_element(
+        momapy_bel.core.ProteinModification
+    )
+    bel_modification.identifier = get_normalized_identifier(
+        cd_structural_state.value
+    )
+    bel_modification.namespace = CD_NAMESPACE
+    bel_modification = momapy.builder.object_from_builder(bel_modification)
+    super_bel_element.modifications.append(bel_modification)
+    return bel_modification
+
+
 def make_and_add_protein_abundance_from_cd_species(
     cd_species,
     cd_annotations,
     bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_abundance = generic_make_protein_abundance_from_cd_species(
+        cd_species=cd_species,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    bel_model.statements.add(bel_abundance)
+    cd_element_to_bel_element[cd_species] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_complex_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_abundance = generic_make_complex_abundance_from_cd_species(
+        cd_species=cd_species,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    bel_model.statements.add(bel_abundance)
+    cd_element_to_bel_element[cd_species] = bel_abundance
+    for bel_subunit in bel_abundance.members:
+        bel_has_component = momapy_bel.core.HasComponent(
+            source=bel_abundance, target=bel_subunit
+        )
+        bel_model.statements.add(bel_has_component)
+    return bel_abundance
+
+
+def make_and_add_included_abundance_from_cd_subunit(
+    cd_subunit,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = generic_make_abundance_from_cd_species(
+        cd_species=cd_subunit,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    super_bel_element.members.add(bel_abundance)
+    cd_element_to_bel_element[cd_subunit] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_included_gene_abundance_from_cd_subunit(
+    cd_subunit,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = generic_make_gene_abundance_from_cd_species(
+        cd_species=cd_subunit,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    super_bel_element.members.add(bel_abundance)
+    cd_element_to_bel_element[cd_subunit] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_included_rna_abundance_from_cd_subunit(
+    cd_subunit,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = generic_make_rna_abundance_from_cd_species(
+        cd_species=cd_subunit,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    super_bel_element.members.add(bel_abundance)
+    cd_element_to_bel_element[cd_subunit] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_included_microrna_abundance_from_cd_subunit(
+    cd_subunit,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = generic_make_microrna_abundance_from_cd_species(
+        cd_species=cd_subunit,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    super_bel_element.members.add(bel_abundance)
+    cd_element_to_bel_element[cd_subunit] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_included_protein_abundance_from_cd_subunit(
+    cd_subunit,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = generic_make_protein_abundance_from_cd_species(
+        cd_species=cd_subunit,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    super_bel_element.members.add(bel_abundance)
+    cd_element_to_bel_element[cd_subunit] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_included_complex_abundance_from_cd_subunit(
+    cd_subunit,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = generic_make_complex_abundance_from_cd_species(
+        cd_species=cd_subunit,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    super_bel_element.members.add(bel_abundance)
+    cd_element_to_bel_element[cd_subunit] = bel_abundance
+    return bel_abundance
+
+
+def make_and_add_reaction_from_cd_reaction(
+    cd_reaction,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_reaction = bel_model.new_element(momapy_bel.core.Reaction)
+    for cd_reactant in cd_reaction.reactants:
+        cd_reactant_species = cd_reactant.referred_species
+        bel_reactant = cd_element_to_bel_element[cd_reactant_species]
+        bel_reaction.reactants.add(bel_reactant)
+    for cd_product in cd_reaction.products:
+        cd_product_species = cd_product.referred_species
+        bel_product = cd_element_to_bel_element[cd_product_species]
+        bel_reaction.products.add(bel_product)
+    bel_reaction = momapy.builder.object_from_builder(bel_reaction)
+    bel_model.statements.add(bel_reaction)
+    cd_element_to_bel_element[cd_reaction] = bel_reaction
+    for cd_modifier in cd_reaction.modifiers:
+        _ = make_and_add_bel_element_from_cd_element(
+            cd_element=cd_modifier,
+            cd_annotations=cd_annotations,
+            bel_model=bel_model,
+            bel_annotations=bel_annotations,
+            cd_element_to_bel_element=cd_element_to_bel_element,
+            super_cd_element=cd_reaction,
+            super_bel_element=bel_reaction,
+        )
+    return bel_reaction
+
+
+def make_and_add_regulates_from_cd_modifier(
+    cd_modifier,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modifier(
+        cd_modifier=cd_modifier,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.Regulates,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_increases_from_cd_modifier(
+    cd_modifier,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modifier(
+        cd_modifier=cd_modifier,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.Increases,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_directly_increases_from_cd_modifier(
+    cd_modifier,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modifier(
+        cd_modifier=cd_modifier,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.DirectlyIncreases,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_decreases_from_cd_modifier(
+    cd_modifier,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modifier(
+        cd_modifier=cd_modifier,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.Decreases,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_increase_from_cd_modifier(
+    cd_modifier,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modifier(
+        cd_modifier=cd_modifier,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.Increases,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_regulates_from_cd_modulation(
+    cd_modulation,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modulation(
+        cd_modulation=cd_modulation,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.Decreases,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_decreases_from_cd_modulation(
+    cd_modulation,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modulation(
+        cd_modulation=cd_modulation,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.Decreases,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_increases_from_cd_modulation(
+    cd_modulation,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modulation(
+        cd_modulation=cd_modulation,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.Increases,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_directly_increases_from_cd_modulation(
+    cd_modulation,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modulation(
+        cd_modulation=cd_modulation,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.DirectlyIncreases,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def make_and_add_directly_regulates_from_cd_modulation(
+    cd_modulation,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = generic_make_and_add_relations_from_cd_modulation(
+        cd_modulation=cd_modulation,
+        cd_annotations=cd_annotations,
+        bel_model=bel_model,
+        bel_annotations=bel_annotations,
+        model_element_cls=momapy_bel.core.Regulates,
+        cd_element_to_bel_element=cd_element_to_bel_element,
+        super_cd_element=super_cd_element,
+        super_bel_element=super_bel_element,
+    )
+    return bel_relations
+
+
+def generic_make_and_add_relations_from_cd_modifier(
+    cd_modifier,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    model_element_cls,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_relations = []
+    cd_source = cd_modifier.referred_species
+    main_iri = get_main_annotation_iri_from_cd_element(
+        super_cd_element, cd_annotations, PUBLICATION_NAMESPACES
+    )
+    if main_iri is not None:
+        namespace, identifier = get_namespace_and_identifier_from_cd_iri(
+            main_iri
+        )
+        bel_citation = momapy_bel.core.Citation(
+            namespace=namespace, identifier=identifier
+        )
+    else:
+        bel_citation = None
+    if isinstance(cd_source, momapy.celldesigner.core.Species):
+        bel_abundance = cd_element_to_bel_element[cd_source]
+        bel_sources = [bel_abundance]
+    elif isinstance(cd_source, momapy.celldesigner.core.OrGate):
+        bel_sources = []
+        for cd_input in cd_source.inputs:
+            bel_abundance = cd_element_to_bel_element[cd_input]
+            bel_sources.append(bel_abundance)
+    elif isinstance(cd_source, momapy.celldesigner.core.AndGate):
+        bel_abundance = bel_model.new_element(momapy_bel.CompositeAbundance)
+        for cd_input in cd_source.inputs:
+            bel_member_abundance = cd_element_to_bel_element[cd_input]
+            bel_abundance.members.add(bel_member_abundance)
+        bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+        bel_sources = [bel_abundance]
+    for bel_source in bel_sources:
+        bel_relation = model_element_cls(
+            source=bel_source, target=super_bel_element
+        )
+        bel_model.statements.add(bel_relation)
+        bel_relations.append(bel_relation)
+        if bel_citation is not None:
+            bel_annotations[bel_relation].add(bel_citation)
+    return bel_relations
+
+
+def generic_make_and_add_relations_from_cd_modulation(
+    cd_modulation,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    model_element_cls,
+    cd_element_to_bel_element,
+    super_cd_element=None,
+    super_bel_element=None,
+):
+    bel_relations = []
+    bel_target = cd_element_to_bel_element[cd_modulation.target]
+    main_iri = get_main_annotation_iri_from_cd_element(
+        cd_modulation, cd_annotations, PUBLICATION_NAMESPACES
+    )
+    if main_iri is not None:
+        namespace, identifier = get_namespace_and_identifier_from_cd_iri(
+            main_iri
+        )
+        bel_citation = momapy_bel.core.Citation(
+            namespace=namespace, identifier=identifier
+        )
+    else:
+        bel_citation = None
+    cd_source = cd_modulation.source
+    if isinstance(cd_source, momapy.celldesigner.core.Species):
+        bel_abundance = cd_element_to_bel_element[cd_source]
+        bel_sources = [bel_abundance]
+    elif isinstance(cd_source, momapy.celldesigner.core.OrGate):
+        bel_sources = []
+        for cd_input in cd_source.inputs:
+            bel_abundance = cd_element_to_bel_element[cd_input]
+            bel_sources.append(bel_abundance)
+    elif isinstance(cd_source, momapy.celldesigner.core.AndGate):
+        bel_abundance = bel_model.new_element(momapy_bel.CompositeAbundance)
+        for cd_input in cd_source.inputs:
+            bel_member_abundance = cd_element_to_bel_element[cd_input]
+            bel_abundance.members.add(bel_member_abundance)
+        bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+        bel_sources = [bel_abundance]
+    for bel_source in bel_sources:
+        bel_relation = model_element_cls(source=bel_source, target=bel_target)
+        bel_model.statements.add(bel_relation)
+        bel_relations.append(bel_relation)
+        if bel_citation is not None:
+            bel_annotations[bel_relation].add(bel_citation)
+    return bel_relations
+
+
+def generic_make_degraded_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = bel_model.new_element(momapy_bel.core.Abundance)
+    bel_abundance.namespace = CD_NAMESPACE
+    bel_abundance.identifier = "DEGRADED"
+    bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+    return bel_abundance
+
+
+def generic_make_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = bel_model.new_element(momapy_bel.core.Abundance)
+    main_iri = get_main_annotation_iri_from_cd_element(
+        cd_species, cd_annotations, ABUNDANCE_NAMESPACES
+    )
+    if main_iri is not None:
+        namespace, identifier = get_namespace_and_identifier_from_cd_iri(
+            main_iri
+        )
+    else:
+        namespace = CD_NAMESPACE
+        identifier = cd_species.name
+        identifier = get_normalized_identifier(identifier)
+    bel_abundance.namespace = namespace
+    bel_abundance.identifier = identifier
+    if cd_species.compartment is not None:
+        cd_compartment = cd_species.compartment
+        make_and_add_location_from_cd_compartment(
+            cd_compartment=cd_compartment,
+            cd_annotations=cd_annotations,
+            bel_model=bel_model,
+            bel_annotations=bel_annotations,
+            cd_element_to_bel_element=cd_element_to_bel_element,
+            super_cd_element=cd_species,
+            super_bel_element=bel_abundance,
+        )
+    bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+    return bel_abundance
+
+
+def generic_make_gene_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = bel_model.new_element(momapy_bel.core.GeneAbundance)
+    main_iri = get_main_annotation_iri_from_cd_element(
+        cd_species, cd_annotations, GENE_NAMESPACES
+    )
+    if main_iri is not None:
+        namespace, identifier = get_namespace_and_identifier_from_cd_iri(
+            main_iri
+        )
+    else:
+        namespace = CD_NAMESPACE
+        identifier = cd_species.name
+        identifier = get_normalized_identifier(identifier)
+    bel_abundance.namespace = namespace
+    bel_abundance.identifier = identifier
+    if cd_species.compartment is not None:
+        cd_compartment = cd_species.compartment
+        make_and_add_location_from_cd_compartment(
+            cd_compartment=cd_compartment,
+            cd_annotations=cd_annotations,
+            bel_model=bel_model,
+            bel_annotations=bel_annotations,
+            cd_element_to_bel_element=cd_element_to_bel_element,
+            super_cd_element=cd_species,
+            super_bel_element=bel_abundance,
+        )
+    bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+    return bel_abundance
+
+
+def generic_make_rna_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = bel_model.new_element(momapy_bel.core.RNAAbundance)
+    main_iri = get_main_annotation_iri_from_cd_element(
+        cd_species, cd_annotations, RNA_NAMESPACES
+    )
+    if main_iri is not None:
+        namespace, identifier = get_namespace_and_identifier_from_cd_iri(
+            main_iri
+        )
+    else:
+        namespace = CD_NAMESPACE
+        identifier = cd_species.name
+        identifier = get_normalized_identifier(identifier)
+    bel_abundance.namespace = namespace
+    bel_abundance.identifier = identifier
+    if cd_species.compartment is not None:
+        cd_compartment = cd_species.compartment
+        make_and_add_location_from_cd_compartment(
+            cd_compartment=cd_compartment,
+            cd_annotations=cd_annotations,
+            bel_model=bel_model,
+            bel_annotations=bel_annotations,
+            cd_element_to_bel_element=cd_element_to_bel_element,
+            super_cd_element=cd_species,
+            super_bel_element=bel_abundance,
+        )
+    bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+    return bel_abundance
+
+
+def generic_make_microrna_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
+    cd_element_to_bel_element,
+    super_cd_element,
+    super_bel_element,
+):
+    bel_abundance = bel_model.new_element(momapy_bel.core.MicroRNAAbundance)
+    main_iri = get_main_annotation_iri_from_cd_element(
+        cd_species, cd_annotations, MICRORNA_NAMESPACES
+    )
+    if main_iri is not None:
+        namespace, identifier = get_namespace_and_identifier_from_cd_iri(
+            main_iri
+        )
+    else:
+        namespace = CD_NAMESPACE
+        identifier = cd_species.name
+        identifier = get_normalized_identifier(identifier)
+    bel_abundance.namespace = namespace
+    bel_abundance.identifier = identifier
+    if cd_species.compartment is not None:
+        cd_compartment = cd_species.compartment
+        make_and_add_location_from_cd_compartment(
+            cd_compartment=cd_compartment,
+            cd_annotations=cd_annotations,
+            bel_model=bel_model,
+            bel_annotations=bel_annotations,
+            cd_element_to_bel_element=cd_element_to_bel_element,
+            super_cd_element=cd_species,
+            super_bel_element=bel_abundance,
+        )
+    bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+    return bel_abundance
+
+
+def generic_make_protein_abundance_from_cd_species(
+    cd_species,
+    cd_annotations,
+    bel_model,
+    bel_annotations,
     cd_element_to_bel_element,
     super_cd_element=None,
     super_bel_element=None,
@@ -162,6 +1036,7 @@ def make_and_add_protein_abundance_from_cd_species(
             cd_compartment=cd_compartment,
             cd_annotations=cd_annotations,
             bel_model=bel_model,
+            bel_annotations=bel_annotations,
             cd_element_to_bel_element=cd_element_to_bel_element,
             super_cd_element=cd_species,
             super_bel_element=bel_abundance,
@@ -175,20 +1050,30 @@ def make_and_add_protein_abundance_from_cd_species(
                 cd_modification=cd_modification,
                 cd_annotations=cd_annotations,
                 bel_model=bel_model,
+                bel_annotations=bel_annotations,
                 cd_element_to_bel_element=cd_element_to_bel_element,
                 super_cd_element=cd_species,
                 super_bel_element=bel_abundance,
             )
+    for cd_structural_state in cd_species.structural_states:
+        make_and_add_modification_from_cd_structural_state(
+            cd_structural_state=cd_structural_state,
+            cd_annotations=cd_annotations,
+            bel_model=bel_model,
+            bel_annotations=bel_annotations,
+            cd_element_to_bel_element=cd_element_to_bel_element,
+            super_cd_element=cd_species,
+            super_bel_element=bel_abundance,
+        )
     bel_abundance = momapy.builder.object_from_builder(bel_abundance)
-    bel_model.statements.add(bel_abundance)
-    cd_element_to_bel_element[cd_species] = bel_abundance
     return bel_abundance
 
 
-def make_and_add_complex_abundance_from_cd_species(
+def generic_make_complex_abundance_from_cd_species(
     cd_species,
     cd_annotations,
     bel_model,
+    bel_annotations,
     cd_element_to_bel_element,
     super_cd_element=None,
     super_bel_element=None,
@@ -213,234 +1098,32 @@ def make_and_add_complex_abundance_from_cd_species(
             cd_compartment=cd_compartment,
             cd_annotations=cd_annotations,
             bel_model=bel_model,
+            bel_annotations=bel_annotations,
             cd_element_to_bel_element=cd_element_to_bel_element,
             super_cd_element=cd_species,
             super_bel_element=bel_abundance,
         )
+    bel_subunits = []
     for cd_subunit in cd_species.subunits:
-        make_and_add_bel_element_from_cd_element(
+        bel_subunit = make_and_add_bel_element_from_cd_element(
             cd_element=cd_subunit,
             cd_annotations=cd_annotations,
             bel_model=bel_model,
+            bel_annotations=bel_annotations,
             cd_element_to_bel_element=cd_element_to_bel_element,
             super_cd_element=cd_species,
             super_bel_element=bel_abundance,
         )
+        bel_subunits.append(bel_subunit)
     bel_abundance = momapy.builder.object_from_builder(bel_abundance)
-    bel_model.statements.add(bel_abundance)
-    cd_element_to_bel_element[cd_species] = bel_abundance
     return bel_abundance
-
-
-def make_and_add_included_abundance_from_cd_subunit(
-    cd_subunit,
-    cd_annotations,
-    bel_model,
-    cd_element_to_bel_element,
-    super_cd_element,
-    super_bel_element,
-):
-    bel_abundance = bel_model.new_element(momapy_bel.core.Abundance)
-    main_iri = get_main_annotation_iri_from_cd_element(
-        cd_subunit, cd_annotations, ABUNDANCE_NAMESPACES
-    )
-    if main_iri is not None:
-        namespace, identifier = get_namespace_and_identifier_from_cd_iri(
-            main_iri
-        )
-    else:
-        namespace = CD_NAMESPACE
-        identifier = cd_subunit.name
-        identifier = get_normalized_identifier(identifier)
-    bel_abundance.namespace = namespace
-    bel_abundance.identifier = identifier
-    if cd_subunit.compartment is not None:
-        cd_compartment = cd_subunit.compartment
-        make_and_add_location_from_cd_compartment(
-            cd_compartment=cd_compartment,
-            cd_annotations=cd_annotations,
-            bel_model=bel_model,
-            cd_element_to_bel_element=cd_element_to_bel_element,
-            super_cd_element=cd_subunit,
-            super_bel_element=bel_abundance,
-        )
-    bel_abundance = momapy.builder.object_from_builder(bel_abundance)
-    super_bel_element.members.add(bel_abundance)
-    return bel_abundance
-
-
-def make_and_add_reaction_from_cd_reaction(
-    cd_reaction,
-    cd_annotations,
-    bel_model,
-    cd_element_to_bel_element,
-    super_cd_element=None,
-    super_bel_element=None,
-):
-    reactants = []
-    products = []
-    for cd_reactant in cd_reaction.reactants:
-        cd_reactant_species = cd_reactant.referred_species
-        bel_reactant = cd_element_to_bel_element.get(cd_reactant_species)
-        if bel_reactant is None:
-            bel_reactant = make_and_add_bel_element_from_cd_element(
-                cd_reactant_species,
-                cd_annotations,
-                bel_model,
-                cd_element_to_bel_element,
-            )
-        if bel_reactant is not None:  # to delete
-            reactants.append(bel_reactant)
-    for cd_product in cd_reaction.products:
-        cd_product_species = cd_product.referred_species
-        bel_product = cd_element_to_bel_element.get(cd_product_species)
-        if bel_product is None:
-            bel_product = make_and_add_bel_element_from_cd_element(
-                cd_product_species,
-                cd_annotations,
-                bel_model,
-                cd_element_to_bel_element,
-            )
-        if bel_product is not None:  # to delete
-            products.append(bel_product)
-    if reactants and products:  # to delete
-        bel_reaction = momapy_bel.core.Reaction(
-            reactants=frozenset(reactants), products=frozenset(products)
-        )
-        bel_model.statements.add(bel_reaction)
-        cd_element_to_bel_element[cd_reaction] = bel_reaction
-    else:
-        bel_reaction = None
-    return bel_reaction
-
-
-def make_and_add_modulatory_activity_from_cd_modifier(
-    cd_modifier,
-    cd_annotations,
-    bel_model,
-    cd_element_to_bel_element,
-    super_cd_element,
-):
-    generic_make_and_add_activity_from_cd_modifier(
-        cd_modifier=cd_modifier,
-        cd_annotations=cd_annotations,
-        bel_model=bel_model,
-        bel_model_function_name="regulates",
-        cd_element_to_bel_element=cd_element_to_bel_element,
-        super_cd_element=super_cd_element,
-        effect=None,
-    )
-
-
-def make_and_add_catalytic_activity_from_cd_modifier(
-    cd_modifier,
-    cd_annotations,
-    bel_model,
-    cd_element_to_bel_element,
-    super_cd_element,
-):
-    generic_make_and_add_activity_from_cd_modifier(
-        cd_modifier=cd_modifier,
-        cd_annotations=cd_annotations,
-        bel_model=bel_model,
-        bel_model_function_name="add_directly_increases",
-        cd_element_to_bel_element=cd_element_to_bel_element,
-        super_cd_element=super_cd_element,
-        effect={"namespace": "GO", "identifier": "0003824"},
-    )
-
-
-def make_and_add_inhibitory_activity_from_cd_modifier(
-    cd_modifier,
-    cd_annotations,
-    bel_model,
-    cd_element_to_bel_element,
-    super_cd_element,
-):
-    generic_make_and_add_activity_from_cd_modifier(
-        cd_modifier=cd_modifier,
-        cd_annotations=cd_annotations,
-        bel_model=bel_model,
-        bel_model_function_name="add_decreases",
-        cd_element_to_bel_element=cd_element_to_bel_element,
-        super_cd_element=super_cd_element,
-        effect=None,
-    )
-
-
-def make_and_add_stimulatory_activity_from_cd_modifier(
-    cd_modifier,
-    cd_annotations,
-    bel_model,
-    cd_element_to_bel_element,
-    super_cd_element,
-):
-    generic_make_and_add_activity_from_cd_modifier(
-        cd_modifier=cd_modifier,
-        cd_annotations=cd_annotations,
-        bel_model=bel_model,
-        bel_model_function_name="add_directly_increases",
-        cd_element_to_bel_element=cd_element_to_bel_element,
-        super_cd_element=super_cd_element,
-        effect=None,
-    )
-
-
-def generic_make_and_add_activity_from_cd_modifier(
-    cd_modifier,
-    cd_annotations,
-    bel_model,
-    bel_model_function_name,
-    cd_element_to_bel_element,
-    super_cd_element,
-    effect=None,
-):
-    bel_reaction = cd_element_to_bel_element[super_cd_element]
-    cd_species = cd_modifier.referred_species
-    bel_abundance = cd_element_to_bel_element.get(cd_species)
-    if bel_abundance is None:
-        bel_abundance = make_and_add_bel_element_from_cd_element(
-            cd_species, cd_annotations, bel_model, cd_element_to_bel_element
-        )
-    if bel_abundance is not None:  # to delete
-        source_modifier = {
-            "modifier": "Activity",
-        }
-        if cd_species.compartment is not None:
-            cd_compartment = cd_species.compartment
-            cd_compartment_iri = get_main_annotation_iri_from_cd_element(
-                cd_compartment, cd_annotations, namespaces=[]
-            )
-            if cd_compartment_iri is not None:
-                compartment_namespace, compartment_identifier = (
-                    get_namespace_and_identifier_from_cd_iri(
-                        cd_compartment_iri
-                    )
-                )
-                source_modifier["location"] = {
-                    "namespace": compartment_namespace,
-                    "name": compartment_identifier,
-                }
-            else:
-                pass
-        for cd_modification in cd_species.modifications:
-            print(cd_modification)
-        if effect is not None:
-            source_modifier["effect"] = effect
-        bel_model_function = getattr(bel_model, bel_model_function_name)
-        bel_model_function(
-            source=bel_abundance,
-            target=bel_reaction,
-            evidence="test evidence",
-            citation="12345678",
-            source_modifier=source_modifier,
-        )
 
 
 def make_and_add_bel_element_from_cd_element(
     cd_element,
     cd_annotations,
     bel_model,
+    bel_annotations,
     cd_element_to_bel_element,
     super_cd_element=None,
     super_bel_element=None,
@@ -453,19 +1136,22 @@ def make_and_add_bel_element_from_cd_element(
             cd_element,
             cd_annotations,
             bel_model,
+            bel_annotations,
             cd_element_to_bel_element,
             super_cd_element,
             super_bel_element,
         )
     else:
+        print(f"no function for element of type {type(cd_element)}")
         bel_term = None
-        # print(f"no function for element of type {type(cd_element)}")
     return bel_term
 
 
 def get_make_and_add_function_from_cd_element(cd_element, super_cd_element):
-    if super_cd_element is not None:
-        key = (type(cd_element), type(super_cd_element))
+    if isinstance(cd_element, momapy.celldesigner.core.Species) and isinstance(
+        super_cd_element, momapy.celldesigner.core.Complex
+    ):
+        key = (type(cd_element), "SUBUNIT")
     else:
         key = type(cd_element)
     make_and_add_function = CD_ELEMENT_TYPE_TO_MAKE_AND_ADD_FUNC.get(key)
@@ -518,22 +1204,90 @@ def get_normalized_namespace(namespace):
 
 
 CD_ELEMENT_TYPE_TO_MAKE_AND_ADD_FUNC = {
+    momapy.celldesigner.core.Degraded: make_and_add_degraded_from_cd_species,
     momapy.celldesigner.core.SimpleMolecule: make_and_add_abundance_from_cd_species,
-    momapy.celldesigner.core.Complex: make_and_add_complex_abundance_from_cd_species,
+    momapy.celldesigner.core.Unknown: make_and_add_abundance_from_cd_species,
+    momapy.celldesigner.core.Drug: make_and_add_abundance_from_cd_species,
     momapy.celldesigner.core.Ion: make_and_add_abundance_from_cd_species,
+    momapy.celldesigner.core.Gene: make_and_add_gene_abundance_from_cd_species,
+    momapy.celldesigner.core.RNA: make_and_add_rna_abundance_from_cd_species,
+    momapy.celldesigner.core.Complex: make_and_add_complex_abundance_from_cd_species,
     momapy.celldesigner.core.GenericProtein: make_and_add_protein_abundance_from_cd_species,
     momapy.celldesigner.core.Receptor: make_and_add_protein_abundance_from_cd_species,
     momapy.celldesigner.core.IonChannel: make_and_add_protein_abundance_from_cd_species,
     momapy.celldesigner.core.TruncatedProtein: make_and_add_protein_abundance_from_cd_species,
+    momapy.celldesigner.core.Phenotype: make_and_add_biological_process_from_cd_species,
     momapy.celldesigner.core.StateTransition: make_and_add_reaction_from_cd_reaction,
-    momapy.celldesigner.core.Catalyzer: make_and_add_catalytic_activity_from_cd_modifier,
-    momapy.celldesigner.core.Inhibitor: make_and_add_inhibitory_activity_from_cd_modifier,
-    momapy.celldesigner.core.PhysicalStimulator: make_and_add_stimulatory_activity_from_cd_modifier,
-    momapy.celldesigner.core.Modulator: make_and_add_modulatory_activity_from_cd_modifier,
+    momapy.celldesigner.core.KnownTransitionOmitted: make_and_add_reaction_from_cd_reaction,
+    momapy.celldesigner.core.UnknownTransition: make_and_add_reaction_from_cd_reaction,
+    momapy.celldesigner.core.HeterodimerAssociation: make_and_add_reaction_from_cd_reaction,
+    momapy.celldesigner.core.Dissociation: make_and_add_reaction_from_cd_reaction,
+    momapy.celldesigner.core.Truncation: make_and_add_reaction_from_cd_reaction,
+    momapy.celldesigner.core.Transport: make_and_add_reaction_from_cd_reaction,
+    momapy.celldesigner.core.Transcription: make_and_add_reaction_from_cd_reaction,
+    momapy.celldesigner.core.Translation: make_and_add_reaction_from_cd_reaction,
+    momapy.celldesigner.core.Modulator: make_and_add_regulates_from_cd_modifier,
+    momapy.celldesigner.core.UnknownModulator: make_and_add_regulates_from_cd_modifier,
+    momapy.celldesigner.core.Inhibitor: make_and_add_decreases_from_cd_modifier,
+    momapy.celldesigner.core.PhysicalStimulator: make_and_add_directly_increases_from_cd_modifier,
+    momapy.celldesigner.core.Catalyzer: make_and_add_directly_increases_from_cd_modifier,
+    momapy.celldesigner.core.Trigger: make_and_add_increases_from_cd_modifier,
+    momapy.celldesigner.core.UnknownCatalyzer: make_and_add_directly_increases_from_cd_modifier,
+    momapy.celldesigner.core.UnknownInhibitor: make_and_add_decreases_from_cd_modifier,
+    momapy.celldesigner.core.Modulation: make_and_add_regulates_from_cd_modulation,
+    momapy.celldesigner.core.Catalysis: make_and_add_directly_increases_from_cd_modulation,
+    momapy.celldesigner.core.Inhibition: make_and_add_decreases_from_cd_modulation,
+    momapy.celldesigner.core.PhysicalStimulation: make_and_add_directly_increases_from_cd_modulation,
+    momapy.celldesigner.core.Triggering: make_and_add_increases_from_cd_modulation,
+    momapy.celldesigner.core.NegativeInfluence: make_and_add_decreases_from_cd_modulation,
+    momapy.celldesigner.core.PositiveInfluence: make_and_add_increases_from_cd_modulation,
+    momapy.celldesigner.core.UnknownModulation: make_and_add_regulates_from_cd_modulation,
+    momapy.celldesigner.core.UnknownCatalysis: make_and_add_directly_increases_from_cd_modulation,
+    momapy.celldesigner.core.UnknownInhibition: make_and_add_decreases_from_cd_modulation,
+    momapy.celldesigner.core.UnknownPositiveInfluence: make_and_add_increases_from_cd_modulation,
+    momapy.celldesigner.core.UnknownNegativeInfluence: make_and_add_decreases_from_cd_modulation,
+    momapy.celldesigner.core.UnknownPhysicalStimulation: make_and_add_directly_increases_from_cd_modulation,
+    momapy.celldesigner.core.UnknownTriggering: make_and_add_increases_from_cd_modulation,
     (
         momapy.celldesigner.core.SimpleMolecule,
-        momapy.celldesigner.core.Complex,
+        "SUBUNIT",
     ): make_and_add_included_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.Drug,
+        "SUBUNIT",
+    ): make_and_add_included_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.Unknown,
+        "SUBUNIT",
+    ): make_and_add_included_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.Ion,
+        "SUBUNIT",
+    ): make_and_add_included_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.Gene,
+        "SUBUNIT",
+    ): make_and_add_included_gene_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.RNA,
+        "SUBUNIT",
+    ): make_and_add_included_rna_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.GenericProtein,
+        "SUBUNIT",
+    ): make_and_add_included_protein_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.Receptor,
+        "SUBUNIT",
+    ): make_and_add_included_protein_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.IonChannel,
+        "SUBUNIT",
+    ): make_and_add_included_protein_abundance_from_cd_subunit,
+    (
+        momapy.celldesigner.core.TruncatedProtein,
+        "SUBUNIT",
+    ): make_and_add_included_protein_abundance_from_cd_subunit,
 }
 
 CD_NAMESPACE_TO_NORMALIZED_NAMESPACE = {
