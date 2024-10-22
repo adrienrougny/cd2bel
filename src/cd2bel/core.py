@@ -65,6 +65,10 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
             cd_element_to_bel_element,
         )
     bel_model = momapy.builder.object_from_builder(bel_model)
+    document_annotation = momapy_bel.core.DocumentAnnotation(
+        name="test_name", description="test_description"
+    )
+    bel_annotations[bel_model].add(document_annotation)
     return bel_model, bel_annotations
 
 
