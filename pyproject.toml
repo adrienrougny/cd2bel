@@ -6,9 +6,8 @@ authors = [
     {name = "Adrien Rougny", email = "adrienrougny@gmail.com"},
 ]
 dependencies = [
-    "momapy @ git+https://github.com/adrienrougny/momapy.git@commute",
 ]
-requires-python = "<=3.11,>=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
 license = {text = "MIT"}
 
@@ -23,4 +22,5 @@ distribution = true
 [tool.pdm.dev-dependencies]
 dev = [
     "-e file:///${PROJECT_ROOT}/../momapy_bel#egg=momapy-bel",
+    "-e file:///${PROJECT_ROOT}/../momapy#egg=momapy",
 ]
