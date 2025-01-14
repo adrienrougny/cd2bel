@@ -77,6 +77,25 @@ PHENOTYPE_NAMESPACES = ["obo.go", "mesh", "omim", "wikipathways"]
 COMPARTMENT_NAMESPACES = ["obo.go", "mesh"]
 PUBLICATION_NAMESPACES = ["pubmed", "doi"]
 CD_NAMESPACE = "CELLDESIGNER"
+CD_DEGRADATION_IDENTIFIER = "degradation"
+CD_DEFAULT_COMPARTMENT_IDENTIFIER = "default"
+
+CD_NAMESPACE_TO_BEL_NAMESPACE = {
+    "obo.go": "go",
+    "hgnc.symbol": "hgnc",
+    "obo.chebi": "chebi",
+    "ec-code": "eccode",
+    "pubchem.compound": "pubchem",
+}
+
+CD_NAMESPACE_TO_GET_LABEL_FUNCTION = {
+    "obo.go": cd2bel.utils.get_go_label_from_id,
+    "obo.chebi": cd2bel.utils.get_chebi_label_from_id,
+    "reactome": cd2bel.utils.get_reactome_label_from_id,
+    "interpro": cd2bel.utils.get_interpro_label_from_id,
+    "mesh": cd2bel.utils.get_mesh_label_from_id,
+    "pfam": cd2bel.utils.get_pfam_label_from_id,
+}
 
 CD_CLASS_TO_BEL_CLASS = {
     momapy.celldesigner.core.Degraded: momapy_bel.core.Abundance,
@@ -164,6 +183,7 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
     cd_element_to_bel_element = {}
     bel_model = momapy_bel.core.BELModelBuilder()
     bel_annotations = collections.defaultdict(set)
+    identifier_to_label = {}
     for cd_species in cd_model.species:
         _ = _make_and_add_bel_abundance_from_cd_species(
             cd_species,
@@ -171,6 +191,7 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
             bel_model,
             bel_annotations,
             cd_element_to_bel_element,
+            identifier_to_label,
         )
     for cd_reaction in cd_model.reactions:
         _ = _make_and_add_bel_reaction_from_cd_reaction(
@@ -179,6 +200,7 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
             bel_model,
             bel_annotations,
             cd_element_to_bel_element,
+            identifier_to_label,
         )
     for cd_modulation in cd_model.modulations:
         _ = _make_and_add_bel_relations_from_cd_modulation(
@@ -187,6 +209,7 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
             bel_model,
             bel_annotations,
             cd_element_to_bel_element,
+            identifier_to_label,
         )
     bel_model = momapy.builder.object_from_builder(bel_model)
     document_annotation = momapy_bel.core.DocumentAnnotation(
@@ -202,6 +225,7 @@ def _make_and_add_bel_abundance_from_cd_species(
     bel_model,
     bel_annotations,
     cd_element_to_bel_element,
+    identifier_to_label,
     super_cd_element=None,
     super_bel_element=None,
 ):
@@ -214,12 +238,17 @@ def _make_and_add_bel_abundance_from_cd_species(
     )
     if main_iri is not None:
         bel_namespace, bel_identifier = (
-            make_bel_namespace_and_identifier_from_cd_iri(main_iri)
+            make_bel_namespace_and_identifier_from_cd_iri(
+                main_iri, identifier_to_label
+            )
         )
     else:
         bel_namespace = CD_NAMESPACE
-        bel_identifier = cd_species.name
-        bel_identifier = make_normalized_identifier(bel_identifier)
+        if isinstance(cd_species, momapy.celldesigner.core.Degraded):
+            bel_identifier = CD_DEGRADATION_IDENTIFIER
+        else:
+            bel_identifier = cd_species.name
+            bel_identifier = make_normalized_identifier(bel_identifier)
     bel_abundance.namespace = bel_namespace
     bel_abundance.identifier = bel_identifier
     if cd_species.compartment is not None:
@@ -230,6 +259,7 @@ def _make_and_add_bel_abundance_from_cd_species(
             bel_model=bel_model,
             bel_annotations=bel_annotations,
             cd_element_to_bel_element=cd_element_to_bel_element,
+            identifier_to_label=identifier_to_label,
             super_cd_element=cd_species,
             super_bel_element=bel_abundance,
         )
@@ -247,6 +277,7 @@ def _make_and_add_bel_abundance_from_cd_species(
                     bel_model=bel_model,
                     bel_annotations=bel_annotations,
                     cd_element_to_bel_element=cd_element_to_bel_element,
+                    identifier_to_label=identifier_to_label,
                     super_cd_element=cd_species,
                     super_bel_element=bel_abundance,
                 )
@@ -260,6 +291,7 @@ def _make_and_add_bel_abundance_from_cd_species(
                 bel_model=bel_model,
                 bel_annotations=bel_annotations,
                 cd_element_to_bel_element=cd_element_to_bel_element,
+                identifier_to_label=identifier_to_label,
                 super_cd_element=cd_species,
                 super_bel_element=bel_abundance,
             )
@@ -272,6 +304,7 @@ def _make_and_add_bel_abundance_from_cd_species(
                 bel_model=bel_model,
                 bel_annotations=bel_annotations,
                 cd_element_to_bel_element=cd_element_to_bel_element,
+                identifier_to_label=identifier_to_label,
                 super_cd_element=cd_species,
                 super_bel_element=bel_abundance,
             )
@@ -295,6 +328,7 @@ def _make_and_add_bel_location_from_cd_compartment(
     bel_model,
     bel_annotations,
     cd_element_to_bel_element,
+    identifier_to_label,
     super_cd_element,
     super_bel_element,
 ):
@@ -308,12 +342,16 @@ def _make_and_add_bel_location_from_cd_compartment(
         )
         if main_iri is not None:
             bel_namespace, bel_identifier = (
-                make_bel_namespace_and_identifier_from_cd_iri(main_iri)
+                make_bel_namespace_and_identifier_from_cd_iri(
+                    main_iri, identifier_to_label
+                )
             )
         else:
             bel_namespace = CD_NAMESPACE
             bel_identifier = (
-                cd_compartment.name if cd_compartment.name else "default"
+                cd_compartment.name
+                if cd_compartment.name
+                else CD_DEFAULT_COMPARTMENT_IDENTIFIER
             )
             bel_identifier = make_normalized_identifier(bel_identifier)
         bel_location.namespace = bel_namespace
@@ -329,6 +367,7 @@ def _make_and_add_bel_modification_from_cd_modification(
     bel_model,
     bel_annotations,
     cd_element_to_bel_element,
+    identifier_to_label,
     super_cd_element=None,
     super_bel_element=None,
 ):
@@ -357,6 +396,7 @@ def _make_and_add_bel_modification_from_cd_structural_state(
     bel_model,
     bel_annotations,
     cd_element_to_bel_element,
+    identifier_to_label,
     super_cd_element=None,
     super_bel_element=None,
 ):
@@ -372,24 +412,56 @@ def _make_and_add_bel_modification_from_cd_structural_state(
     return bel_modification
 
 
+def _is_reaction_a_degradation(cd_reaction):
+    if len(cd_reaction.products) == 1:
+        for cd_product in cd_reaction.products:
+            break
+        cd_product_species = cd_product.referred_species
+        if isinstance(cd_product_species, momapy.celldesigner.core.Degraded):
+            return True
+    return False
+
+
 def _make_and_add_bel_reaction_from_cd_reaction(
     cd_reaction,
     cd_annotations,
     bel_model,
     bel_annotations,
     cd_element_to_bel_element,
+    identifier_to_label,
     super_cd_element=None,
     super_bel_element=None,
 ):
-    bel_reaction = bel_model.new_element(momapy_bel.core.Reaction)
-    for cd_reactant in cd_reaction.reactants:
-        cd_reactant_species = cd_reactant.referred_species
-        bel_reactant = cd_element_to_bel_element[cd_reactant_species]
-        bel_reaction.reactants.add(bel_reactant)
-    for cd_product in cd_reaction.products:
-        cd_product_species = cd_product.referred_species
-        bel_product = cd_element_to_bel_element[cd_product_species]
-        bel_reaction.products.add(bel_product)
+    if _is_reaction_a_degradation(cd_reaction):
+        bel_reaction = bel_model.new_element(momapy_bel.core.Degradation)
+        if len(cd_reaction.reactants) == 1:
+            for cd_reactant in cd_reaction.reactants:
+                break
+            cd_reactant_species = cd_reactant.referred_species
+            bel_reactant = cd_element_to_bel_element[cd_reactant_species]
+            bel_reaction.abundance = bel_reactant
+        else:
+            bel_composite_abundance = bel_model.new_element(
+                momapy_bel.core.CompositeAbundance
+            )
+            for cd_reactant in cd_reaction.reactants:
+                cd_reactant_species = cd_reactant.referred_species
+                bel_reactant = cd_element_to_bel_element[cd_reactant_species]
+                bel_composite_abundance.members.add(bel_reactant)
+            bel_composite_abundance = momapy.builder.object_from_builder(
+                bel_composite_abundance
+            )
+            bel_reaction.abundance = bel_composite_abundance
+    else:
+        bel_reaction = bel_model.new_element(momapy_bel.core.Reaction)
+        for cd_reactant in cd_reaction.reactants:
+            cd_reactant_species = cd_reactant.referred_species
+            bel_reactant = cd_element_to_bel_element[cd_reactant_species]
+            bel_reaction.reactants.add(bel_reactant)
+        for cd_product in cd_reaction.products:
+            cd_product_species = cd_product.referred_species
+            bel_product = cd_element_to_bel_element[cd_product_species]
+            bel_reaction.products.add(bel_product)
     bel_reaction = momapy.builder.object_from_builder(bel_reaction)
     bel_model.statements.add(bel_reaction)
     cd_element_to_bel_element[cd_reaction] = bel_reaction
@@ -400,6 +472,7 @@ def _make_and_add_bel_reaction_from_cd_reaction(
             bel_model=bel_model,
             bel_annotations=bel_annotations,
             cd_element_to_bel_element=cd_element_to_bel_element,
+            identifier_to_label=identifier_to_label,
             super_cd_element=cd_reaction,
             super_bel_element=bel_reaction,
         )
@@ -412,6 +485,7 @@ def _make_and_add_bel_relations_from_cd_modifier(
     bel_model,
     bel_annotations,
     cd_element_to_bel_element,
+    identifier_to_label,
     super_cd_element,
     super_bel_element,
 ):
@@ -424,7 +498,9 @@ def _make_and_add_bel_relations_from_cd_modifier(
     )
     if main_iri is not None:
         bel_namespace, bel_identifier = (
-            make_bel_namespace_and_identifier_from_cd_iri(main_iri)
+            make_bel_namespace_and_identifier_from_cd_iri(
+                main_iri, identifier_to_label
+            )
         )
         bel_citation = momapy_bel.core.Citation(
             namespace=bel_namespace, identifier=bel_identifier
@@ -465,6 +541,7 @@ def _make_and_add_bel_relations_from_cd_modulation(
     bel_model,
     bel_annotations,
     cd_element_to_bel_element,
+    identifier_to_label,
     super_cd_element=None,
     super_bel_element=None,
 ):
@@ -477,7 +554,9 @@ def _make_and_add_bel_relations_from_cd_modulation(
     )
     if main_iri is not None:
         bel_namespace, bel_identifier = (
-            make_bel_namespace_and_identifier_from_cd_iri(main_iri)
+            make_bel_namespace_and_identifier_from_cd_iri(
+                main_iri, identifier_to_label
+            )
         )
         bel_citation = momapy_bel.core.Citation(
             namespace=bel_namespace, identifier=bel_identifier
@@ -536,18 +615,22 @@ def get_namespace_and_identifier_from_cd_iri(cd_iri):
     return cd_namespace, cd_identifier
 
 
-def make_bel_namespace_and_identifier_from_cd_iri(cd_iri):
+def make_bel_namespace_and_identifier_from_cd_iri(cd_iri, identifier_to_label):
     cd_namespace, cd_identifier = get_namespace_and_identifier_from_cd_iri(
         cd_iri
     )
     cd_identifier = cd_identifier.replace("%3A", ":")
-    get_label_function = CD_NAMESPACE_TO_GET_LABEL_FUNCTION.get(cd_namespace)
-    if get_label_function is not None:
-        bel_identifier = get_label_function(cd_identifier)
-    else:
-        bel_identifier = cd_identifier
+    bel_identifier = identifier_to_label.get(cd_identifier)
     if bel_identifier is None:
-        bel_identifier = cd_identifier
+        get_label_function = CD_NAMESPACE_TO_GET_LABEL_FUNCTION.get(
+            cd_namespace
+        )
+        if get_label_function is not None:
+            bel_identifier = get_label_function(cd_identifier)
+        else:
+            bel_identifier = cd_identifier
+        if bel_identifier is None:
+            bel_identifier = cd_identifier
     bel_identifier = make_normalized_identifier(bel_identifier)
     bel_namespace = CD_NAMESPACE_TO_BEL_NAMESPACE.get(cd_namespace)
     if bel_namespace is None:
@@ -560,21 +643,3 @@ def make_normalized_identifier(identifier):
     if not identifier.isalnum():
         identifier = f'"{identifier}"'
     return identifier
-
-
-CD_NAMESPACE_TO_BEL_NAMESPACE = {
-    "obo.go": "go",
-    "hgnc.symbol": "hgnc",
-    "obo.chebi": "chebi",
-    "ec-code": "eccode",
-    "pubchem.compound": "pubchem",
-}
-
-CD_NAMESPACE_TO_GET_LABEL_FUNCTION = {
-    "obo.go": cd2bel.utils.get_go_label_from_id,
-    "obo.chebi": cd2bel.utils.get_chebi_label_from_id,
-    "reactome": cd2bel.utils.get_reactome_label_from_id,
-    "interpro": cd2bel.utils.get_interpro_label_from_id,
-    "mesh": cd2bel.utils.get_mesh_label_from_id,
-    "pfam": cd2bel.utils.get_pfam_label_from_id,
-}
