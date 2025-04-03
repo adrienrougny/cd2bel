@@ -86,9 +86,10 @@ CD_NAMESPACE_TO_NORMALIZED_NAMESPACE = {
 }
 
 NORMALIZED_NAMESPACE_TO_BEL_NAMESPACE = {
-    "ec-code": "eccode",
-    "hgnc.symbol": "hgnc",
-    "pubchem.compound": "pubchem",
+    "ec-code": "ECCODE",
+    "hgnc.symbol": "HGNC",
+    "pubchem.compound": "PUBCHEM",
+    "pubmed": "PubMed",
 }
 
 NORMALIZED_NAMESPACE_TO_GET_LABEL_FUNCTION = {
@@ -534,6 +535,9 @@ def _make_and_add_bel_relations_from_cd_modifier(
                 main_iri, normalized_namespace_and_identifier_to_label
             )
         )
+        # in SET Citation, namespace and identifier need to be quoted
+        bel_namespace = cd2bel.utils.quote_string(bel_namespace)
+        bel_identifier = cd2bel.utils.quote_string(bel_identifier)
         bel_citation = momapy_bel.core.Citation(
             namespace=bel_namespace, identifier=bel_identifier
         )
@@ -676,8 +680,7 @@ def make_bel_namespace_from_normalized_namespace(normalized_namespace):
         normalized_namespace
     )
     if bel_namespace is None:
-        bel_namespace = normalized_namespace
-    bel_namespace = bel_namespace.upper()
+        bel_namespace = normalized_namespace.upper()
     return bel_namespace
 
 
