@@ -414,8 +414,9 @@ def _make_and_add_bel_modification_from_cd_modification(
         if not cd_residue[0].isnumeric():
             bel_modification.amino_acid = cd_residue[0]
             bel_modification.residue = cd_residue[1:]
-        else:
-            bel_modification.residue = cd_residue
+        else:  # if the amino_acid is not specified, the residue is not specified
+            bel_modification.amino_acid = None
+            bel_modification.residue = None
     bel_modification = momapy.builder.object_from_builder(bel_modification)
     super_bel_element.modifications.append(bel_modification)
     return bel_modification
