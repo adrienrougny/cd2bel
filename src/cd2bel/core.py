@@ -512,6 +512,27 @@ def _make_and_add_bel_reaction_from_cd_reaction(
     return bel_reaction
 
 
+def _make_bel_citation_from_main_iri(
+    main_iri, normalized_namespace_and_identifier_to_label
+):
+    bel_namespace, bel_identifier = (
+        make_bel_namespace_and_identifier_from_cd_iri(
+            main_iri, normalized_namespace_and_identifier_to_label
+        )
+    )
+    # in SET Citation, namespace and identifier need to be quoted
+    bel_namespace = cd2bel.utils.quote_string(bel_namespace)
+    bel_identifier = cd2bel.utils.quote_string(bel_identifier)
+    bel_citation = momapy_bel.core.Citation(
+        namespace=bel_namespace, identifier=bel_identifier
+    )
+
+    bel_citation = momapy_bel.core.Citation(
+        namespace=bel_namespace, identifier=bel_identifier
+    )
+    return bel_citation
+
+
 def _make_and_add_bel_relations_from_cd_modifier(
     cd_modifier,
     cd_annotations,
@@ -530,16 +551,8 @@ def _make_and_add_bel_relations_from_cd_modifier(
         super_cd_element, cd_annotations, PUBLICATION_NAMESPACES
     )
     if main_iri is not None:
-        bel_namespace, bel_identifier = (
-            make_bel_namespace_and_identifier_from_cd_iri(
-                main_iri, normalized_namespace_and_identifier_to_label
-            )
-        )
-        # in SET Citation, namespace and identifier need to be quoted
-        bel_namespace = cd2bel.utils.quote_string(bel_namespace)
-        bel_identifier = cd2bel.utils.quote_string(bel_identifier)
-        bel_citation = momapy_bel.core.Citation(
-            namespace=bel_namespace, identifier=bel_identifier
+        bel_citation = _make_bel_citation_from_main_iri(
+            main_iri, normalized_namespace_and_identifier_to_label
         )
     else:
         bel_citation = None
@@ -589,13 +602,8 @@ def _make_and_add_bel_relations_from_cd_modulation(
         cd_modulation, cd_annotations, PUBLICATION_NAMESPACES
     )
     if main_iri is not None:
-        bel_namespace, bel_identifier = (
-            make_bel_namespace_and_identifier_from_cd_iri(
-                main_iri, normalized_namespace_and_identifier_to_label
-            )
-        )
-        bel_citation = momapy_bel.core.Citation(
-            namespace=bel_namespace, identifier=bel_identifier
+        bel_citation = _make_bel_citation_from_main_iri(
+            main_iri, normalized_namespace_and_identifier_to_label
         )
     else:
         bel_citation = None
