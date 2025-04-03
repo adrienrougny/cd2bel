@@ -59,3 +59,7 @@ def get_reactome_label_from_id(id_):
     if names:
         return names[0]
     return None
+
+
+def quote_string(s):
+    return f'"{s}"'
