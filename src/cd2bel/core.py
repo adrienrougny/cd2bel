@@ -165,6 +165,22 @@ CD_CLASS_TO_PREFERRED_CD_NAMESPACES = {
     momapy.celldesigner.core.Phenotype: PHENOTYPE_NAMESPACES,
 }
 
+CD_MODIFICATION_STATE_TO_BEL_PMOD_VALUE = {
+    momapy.celldesigner.core.ModificationState.PHOSPHORYLATED: "Ph",
+    momapy.celldesigner.core.ModificationState.UBIQUITINATED: "Ub",
+    momapy.celldesigner.core.ModificationState.ACETYLATED: "Ac",
+    momapy.celldesigner.core.ModificationState.METHYLATED: "Me",
+    momapy.celldesigner.core.ModificationState.HYDROXYLATED: "Hy",
+    momapy.celldesigner.core.ModificationState.GLYCOSYLATED: "Glyco",
+    momapy.celldesigner.core.ModificationState.MYRISTOYLATED: "Myr",
+    momapy.celldesigner.core.ModificationState.PALMITOYLATED: "Palm",
+    momapy.celldesigner.core.ModificationState.PRENYLATED: None,
+    momapy.celldesigner.core.ModificationState.PROTONATED: None,
+    momapy.celldesigner.core.ModificationState.SULFATED: "Sulf",
+    momapy.celldesigner.core.ModificationState.DON_T_CARE: None,
+    momapy.celldesigner.core.ModificationState.UNKNOWN: None,
+}
+
 
 def cd_to_bel(input_file_path, output_file_path):
     result = momapy.io.read(input_file_path, return_type="model")
@@ -381,7 +397,14 @@ def _make_and_add_bel_modification_from_cd_modification(
     bel_modification = bel_model.new_element(
         momapy_bel.core.ProteinModification
     )
-    bel_modification.identifier = cd_modification.state.value
+    bel_modification_value = CD_MODIFICATION_STATE_TO_BEL_PMOD_VALUE.get(
+        cd_modification.state
+    )
+    if bel_modification_value is not None:
+        bel_modification.identifier = bel_modification_value
+    else:
+        bel_modification.identifier = cd_modification.state.value
+        bel_modification.namespace = CD_NAMESPACE
     if (
         cd_modification.residue is not None
         and cd_modification.residue.name is not None
