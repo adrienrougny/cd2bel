@@ -21,3 +21,8 @@ dev = [
     "-e file:///home/rougny/code/momapy_bel#egg=momapy-bel",
     "-e file:///home/rougny/code/momapy#egg=momapy",
 ]
+
+[dependency-groups]
+dev = [
+    "ebel @ git+http://github.com/e-bel/ebel.git@neo4j",
+]
