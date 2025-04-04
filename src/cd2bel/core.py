@@ -89,7 +89,12 @@ NORMALIZED_NAMESPACE_TO_BEL_NAMESPACE = {
     "ec-code": "ECCODE",
     "hgnc.symbol": "HGNC",
     "pubchem.compound": "PUBCHEM",
+    "pubchem.substance": "PUBCHEMSUBSTANCE",
     "pubmed": "PubMed",
+    "kegg.compound": "KEGGCOUMPOUND",
+    "kegg.reaction": "KEGGREACTION",
+    "kegg.pathway": "KEGGPATHWAY",
+    "wikipedia.en": "WIKIPEDIAEN",
 }
 
 NORMALIZED_NAMESPACE_TO_GET_LABEL_FUNCTION = {
