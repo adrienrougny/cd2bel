@@ -214,14 +214,31 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
             normalized_namespace_and_identifier_to_label,
         )
     for cd_reaction in cd_model.reactions:
-        _ = _make_and_add_bel_reaction_from_cd_reaction(
-            cd_reaction,
-            cd_annotations,
-            bel_model,
-            bel_annotations,
-            cd_element_to_bel_element,
-            normalized_namespace_and_identifier_to_label,
-        )
+        if not any(
+            [
+                isinstance(
+                    cd_reactant.referred_species,
+                    momapy.celldesigner.core.Phenotype,
+                )
+                for cd_reactant in cd_reaction.reactants
+            ]
+        ) and not any(
+            [
+                isinstance(
+                    cd_product.referred_species,
+                    momapy.celldesigner.core.Phenotype,
+                )
+                for cd_product in cd_reaction.products
+            ]
+        ):
+            _ = _make_and_add_bel_reaction_from_cd_reaction(
+                cd_reaction,
+                cd_annotations,
+                bel_model,
+                bel_annotations,
+                cd_element_to_bel_element,
+                normalized_namespace_and_identifier_to_label,
+            )
     for cd_modulation in cd_model.modulations:
         _ = _make_and_add_bel_relations_from_cd_modulation(
             cd_modulation,
