@@ -101,6 +101,53 @@ NORMALIZED_NAMESPACE_TO_GET_LABEL_FUNCTION = {
     "pfam": cd2bel.utils.get_pfam_label_from_id,
 }
 
+NORMALIZED_NAMESPACE_TO_BEL_AS = {
+    "biogrid": ".*",
+    "brenda": ".*",
+    "bto": ".*",
+    "cl": ".*",
+    "clinicaltrials": ".*",
+    "clo": ".*",
+    "drugbank": ".*",
+    "ec-code": ".*",
+    "ensembl": ".*",
+    "hgnc": ".*",
+    "hgnc.symbol": ".*",
+    "inchi": ".*",
+    "inchikey": ".*",
+    "intact": ".*",
+    "interpro": ".*",
+    "kegg.compound": ".*",
+    "kegg.pathway": ".*",
+    "kegg.reaction": ".*",
+    "mesh": ".*",
+    "ncbigene": ".*",
+    "ncbiprotein": ".*",
+    "chebi": ".*",
+    "go": "https://arty.scai.fraunhofer.de/artifactory/bel/namespace/go/go-20180109.belns",
+    "omim": ".*",
+    "pato": ".*",
+    "pdb": ".*",
+    "pfam": ".*",
+    "pmc": ".*",
+    "pr": ".*",
+    "pubchem.compound": ".*",
+    "pubchem.substance": ".*",
+    "reactome": ".*",
+    "refseq": ".*",
+    "rhea": ".*",
+    "ro": ".*",
+    "sio": ".*",
+    "snomedct": ".*",
+    "stitch": ".*",
+    "taxonomy": ".*",
+    "uberon": ".*",
+    "uniprot": ".*",
+    "vmhmetabolite": ".*",
+    "wikipathways": ".*",
+    "wikipedia.en": ".*",
+}
+
 CD_CLASS_TO_BEL_CLASS = {
     momapy.celldesigner.core.Degraded: momapy_bel.core.Abundance,
     momapy.celldesigner.core.SimpleMolecule: momapy_bel.core.Abundance,
@@ -187,13 +234,15 @@ def cd_file_to_bel_file(input_file_path, output_file_path):
     result = momapy.io.read(input_file_path, return_type="model")
     cd_model = result.obj
     cd_annotations = result.annotations
-    bel_model, bel_annotations = cd_model_to_bel_model(
-        cd_model, cd_annotations
+    bel_model, bel_annotations, bel_namespace_definitions = (
+        cd_model_to_bel_model(cd_model, cd_annotations)
     )
     momapy.io.write(
         obj=bel_model,
         file_path=output_file_path,
         writer="bel",
+        namespace_definitions=bel_namespace_definitions,
+        annotation_definitions=[],
         annotations=bel_annotations,
     )
     return bel_model, bel_annotations
@@ -203,6 +252,7 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
     cd_element_to_bel_element = {}
     bel_model = momapy_bel.core.BELModelBuilder()
     bel_annotations = collections.defaultdict(set)
+    bel_namespace_definitions = []
     normalized_namespace_and_identifier_to_label = {}
     for cd_species in cd_model.species:
         _ = _make_and_add_bel_abundance_from_cd_species(
@@ -253,7 +303,20 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
         name="test_name", description="test_description"
     )
     bel_annotations[bel_model].add(document_annotation)
-    return bel_model, bel_annotations
+    for normalized_namespace in NORMALIZED_NAMESPACE_TO_BEL_AS:
+        bel_namespace = make_bel_namespace_from_normalized_namespace(
+            normalized_namespace
+        )
+        bel_as = NORMALIZED_NAMESPACE_TO_BEL_AS[normalized_namespace]
+        bel_namespace_definition = momapy_bel.core.BELNamespaceDefinition(
+            name=bel_namespace, as_=bel_as
+        )
+        bel_namespace_definitions.append(bel_namespace_definition)
+    bel_celldesigner_namespace_definition = (
+        momapy_bel.core.BELNamespaceDefinition(name=CD_NAMESPACE, as_=".*")
+    )
+    bel_namespace_definitions.append(bel_celldesigner_namespace_definition)
+    return bel_model, bel_annotations, bel_namespace_definitions
 
 
 def _make_and_add_bel_abundance_from_cd_species(
