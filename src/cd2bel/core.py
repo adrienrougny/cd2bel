@@ -348,8 +348,8 @@ def _make_and_add_bel_abundance_from_cd_species(
             bel_identifier = CD_DEGRADATION_IDENTIFIER
         else:
             bel_identifier = cd_species.name
-            bel_identifier = make_quoted_bel_identifier_from_bel_identifier(
-                make_normalized_identifier_from_cd_identifier(bel_identifier)
+            bel_identifier = make_normalized_identifier_from_cd_identifier(
+                bel_identifier
             )
     bel_abundance.namespace = bel_namespace
     bel_abundance.identifier = bel_identifier
@@ -455,8 +455,8 @@ def _make_and_add_bel_location_from_cd_compartment(
                 if cd_compartment.name
                 else CD_DEFAULT_COMPARTMENT_IDENTIFIER
             )
-            bel_identifier = make_quoted_bel_identifier_from_bel_identifier(
-                make_normalized_identifier_from_cd_identifier(bel_identifier)
+            bel_identifier = make_normalized_identifier_from_cd_identifier(
+                bel_identifier
             )
         bel_location.namespace = bel_namespace
         bel_location.identifier = bel_identifier
@@ -515,11 +515,7 @@ def _make_and_add_bel_modification_from_cd_structural_state(
     bel_modification = bel_model.new_element(
         momapy_bel.core.ProteinModification
     )
-    bel_modification.identifier = (
-        make_quoted_bel_identifier_from_bel_identifier(
-            cd_structural_state.value
-        )
-    )
+    bel_modification.identifier = cd_structural_state.value
     bel_modification.namespace = CD_NAMESPACE
     bel_modification = momapy.builder.object_from_builder(bel_modification)
     super_bel_element.modifications.append(bel_modification)
@@ -601,9 +597,8 @@ def _make_bel_citation_from_main_iri(
             main_iri, normalized_namespace_and_identifier_to_label
         )
     )
-    # in SET Citation, namespace and identifier need to be quoted
-    bel_namespace = cd2bel.utils.quote_string(bel_namespace)
-    bel_identifier = cd2bel.utils.quote_string(bel_identifier)
+    bel_namespace = bel_namespace
+    bel_identifier = bel_identifier
     bel_citation = momapy_bel.core.Citation(
         namespace=bel_namespace, identifier=bel_identifier
     )
@@ -808,16 +803,8 @@ def make_bel_namespace_and_identifier_from_cd_iri(
             ] = bel_identifier
             if bel_identifier is None:
                 bel_identifier = normalized_identifier
-    bel_identifier = make_quoted_bel_identifier_from_bel_identifier(
-        bel_identifier
-    )
+    bel_identifier = bel_identifier
     bel_namespace = make_bel_namespace_from_normalized_namespace(
         normalized_namespace
     )
     return bel_namespace, bel_identifier
-
-
-def make_quoted_bel_identifier_from_bel_identifier(bel_identifier):
-    if not bel_identifier.isalnum():
-        bel_identifier = f'"{bel_identifier}"'
-    return bel_identifier
