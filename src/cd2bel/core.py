@@ -583,14 +583,25 @@ def _make_and_add_bel_relations_from_cd_modifier(
             bel_abundance = cd_element_to_bel_element[cd_input]
             bel_sources.append(bel_abundance)
     elif isinstance(cd_source, momapy.celldesigner.core.AndGate):
-        bel_abundance = bel_model.new_element(
-            momapy_bel.core.CompositeAbundance
-        )
-        for cd_input in cd_source.inputs:
-            bel_member_abundance = cd_element_to_bel_element[cd_input]
-            bel_abundance.members.add(bel_member_abundance)
-        bel_abundance = momapy.builder.object_from_builder(bel_abundance)
-        bel_sources = [bel_abundance]
+        if not any(
+            [
+                isinstance(
+                    cd_input,
+                    momapy.celldesigner.core.Phenotype,
+                )
+                for cd_input in cd_source.inputs
+            ]
+        ):
+            bel_abundance = bel_model.new_element(
+                momapy_bel.core.CompositeAbundance
+            )
+            for cd_input in cd_source.inputs:
+                bel_member_abundance = cd_element_to_bel_element[cd_input]
+                bel_abundance.members.add(bel_member_abundance)
+            bel_abundance = momapy.builder.object_from_builder(bel_abundance)
+            bel_sources = [bel_abundance]
+        else:
+            bel_sources = []
     for bel_source in bel_sources:
         bel_relation = bel_model_element_cls(
             source=bel_source, target=super_bel_element
