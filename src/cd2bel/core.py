@@ -286,7 +286,7 @@ def _make_and_add_bel_abundance_from_cd_species(
         else:
             bel_identifier = cd_species.name
             bel_identifier = make_quoted_bel_identifier_from_bel_identifier(
-                bel_identifier
+                make_normalized_identifier_from_cd_identifier(bel_identifier)
             )
     bel_abundance.namespace = bel_namespace
     bel_abundance.identifier = bel_identifier
@@ -393,7 +393,7 @@ def _make_and_add_bel_location_from_cd_compartment(
                 else CD_DEFAULT_COMPARTMENT_IDENTIFIER
             )
             bel_identifier = make_quoted_bel_identifier_from_bel_identifier(
-                bel_identifier
+                make_normalized_identifier_from_cd_identifier(bel_identifier)
             )
         bel_location.namespace = bel_namespace
         bel_location.identifier = bel_identifier
@@ -697,7 +697,9 @@ def make_normalized_namespace_from_cd_namespace(cd_namespace):
 
 
 def make_normalized_identifier_from_cd_identifier(cd_identifier):
-    normalized_identifier = cd_identifier.replace("%3A", ":")
+    normalized_identifier = cd_identifier.replace("%3A", ":").replace(
+        "\n", " "
+    )
     return normalized_identifier
 
 
