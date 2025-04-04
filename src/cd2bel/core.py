@@ -183,7 +183,7 @@ CD_MODIFICATION_STATE_TO_BEL_PMOD_VALUE = {
 }
 
 
-def cd_to_bel(input_file_path, output_file_path):
+def cd_file_to_bel_file(input_file_path, output_file_path):
     result = momapy.io.read(input_file_path, return_type="model")
     cd_model = result.obj
     cd_annotations = result.annotations
