@@ -234,6 +234,10 @@ CD_MODIFICATION_STATE_TO_BEL_PMOD_VALUE = {
     momapy.celldesigner.core.ModificationState.UNKNOWN: None,
 }
 
+_citation_definition = momapy_bel.core.BELGenericAnnotationDefinition(
+    name="Citation", as_=""
+)
+
 
 def cd_file_to_bel_file(input_file_path, output_file_path):
     result = momapy.io.read(input_file_path, return_type="model")
@@ -304,7 +308,7 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
             normalized_namespace_and_identifier_to_label,
         )
     bel_model = momapy.builder.object_from_builder(bel_model)
-    document_annotation = momapy_bel.core.DocumentAnnotation(
+    document_annotation = momapy_bel.core.BELDocumentAnnotation(
         name="test_name", description="test_description"
     )
     bel_annotations[bel_model].add(document_annotation)
@@ -602,14 +606,12 @@ def _make_bel_citation_from_main_iri(
             main_iri, normalized_namespace_and_identifier_to_label
         )
     )
-    bel_namespace = bel_namespace
-    bel_identifier = bel_identifier
-    bel_citation = momapy_bel.core.Citation(
-        namespace=bel_namespace, identifier=bel_identifier
-    )
-
-    bel_citation = momapy_bel.core.Citation(
-        namespace=bel_namespace, identifier=bel_identifier
+    bel_citation = momapy_bel.core.BELGenericAnnotation(
+        definition=_citation_definition,
+        args=(
+            bel_namespace,
+            bel_identifier,
+        ),
     )
     return bel_citation
 
