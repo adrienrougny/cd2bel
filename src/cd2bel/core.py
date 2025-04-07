@@ -239,12 +239,22 @@ _citation_definition = momapy_bel.core.BELGenericAnnotationDefinition(
 )
 
 
-def cd_file_to_bel_file(input_file_path, output_file_path):
+def cd_file_to_bel_file(
+    input_file_path,
+    output_file_path,
+    bel_document_name=None,
+    bel_document_description=None,
+):
     result = momapy.io.read(input_file_path, return_type="model")
     cd_model = result.obj
     cd_annotations = result.annotations
     bel_model, bel_annotations, bel_namespace_definitions = (
-        cd_model_to_bel_model(cd_model, cd_annotations)
+        cd_model_to_bel_model(
+            cd_model,
+            cd_annotations,
+            bel_document_name=bel_document_name,
+            bel_document_description=bel_document_description,
+        )
     )
     momapy.io.write(
         obj=bel_model,
@@ -257,7 +267,12 @@ def cd_file_to_bel_file(input_file_path, output_file_path):
     return bel_model, bel_annotations
 
 
-def cd_model_to_bel_model(cd_model, cd_annotations):
+def cd_model_to_bel_model(
+    cd_model,
+    cd_annotations,
+    bel_document_name=None,
+    bel_document_description=None,
+):
     cd_element_to_bel_element = {}
     bel_model = momapy_bel.core.BELModelBuilder()
     bel_annotations = collections.defaultdict(set)
@@ -309,7 +324,7 @@ def cd_model_to_bel_model(cd_model, cd_annotations):
         )
     bel_model = momapy.builder.object_from_builder(bel_model)
     document_annotation = momapy_bel.core.BELDocumentAnnotation(
-        name="test_name", description="test_description"
+        name=bel_document_name, description=bel_document_description
     )
     bel_annotations[bel_model].add(document_annotation)
     for normalized_namespace in NORMALIZED_NAMESPACE_TO_BEL_AS:
