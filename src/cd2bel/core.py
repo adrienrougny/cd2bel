@@ -4,6 +4,7 @@ import momapy_bel.core
 import momapy_bel.io.bel
 
 import momapy.celldesigner.core
+import momapy.celldesigner.io.pickle
 import momapy.celldesigner.io.celldesigner
 import momapy.io
 import momapy.builder
