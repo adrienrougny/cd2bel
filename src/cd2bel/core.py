@@ -226,7 +226,7 @@ CD_CLASS_TO_BEL_CLASS = {
     momapy.celldesigner.core.HeterodimerAssociation: momapy_bel.core.Reaction,
     momapy.celldesigner.core.Dissociation: momapy_bel.core.Reaction,
     momapy.celldesigner.core.Truncation: momapy_bel.core.Reaction,
-    momapy.celldesigner.core.Transport: momapy_bel.core.Translocation,
+    momapy.celldesigner.core.Transport: momapy_bel.core.Reaction,
     momapy.celldesigner.core.Transcription: momapy_bel.core.Reaction,
     momapy.celldesigner.core.Translation: momapy_bel.core.Reaction,
     momapy.celldesigner.core.Modulator: momapy_bel.core.Regulates,
@@ -621,6 +621,22 @@ def _is_reaction_a_degradation(cd_reaction):
     return False
 
 
+def _is_reaction_a_translocation(cd_reaction):
+    if not isinstance(cd_reaction, momapy.celldesigner.core.Transport):
+        return False
+    if len(cd_reaction.reactants) != 1 or len(cd_reaction.reactants) != 1:
+        return False
+    for cd_reactant in cd_reaction.reactants:
+        cd_reactant_species = cd_reactant.referred_species
+        if cd_reactant_species.compartment is None:
+            return False
+    for cd_product in cd_reaction.products:
+        cd_product_species = cd_product.referred_species
+        if cd_product_species.compartment is None:
+            return False
+    return True
+
+
 def _make_and_add_bel_reaction_from_cd_reaction(
     cd_reaction,
     cd_annotations,
@@ -651,62 +667,61 @@ def _make_and_add_bel_reaction_from_cd_reaction(
                 bel_composite_abundance
             )
             bel_reaction.abundance = bel_composite_abundance
+    elif _is_reaction_a_translocation(cd_reaction):
+        bel_reaction = bel_model.new_element(momapy_bel.core.Translocation)
+        # reaction is a transport, we have checked it has one reactant and
+        # one product, each of which have a compartment
+        for cd_reactant in cd_reaction.reactants:
+            break
+        for cd_product in cd_reaction.products:
+            break
+        # we make an abundance from the reactant we found, whith no location
+        cd_reactant_species = cd_reactant.referred_species
+        cd_species = dataclasses.replace(cd_reactant_species, compartment=None)
+        bel_abundance = cd_element_to_bel_element.get(cd_species)
+        if bel_abundance is None:
+            bel_abundance = _make_and_add_bel_abundance_from_cd_species(
+                cd_species,
+                cd_annotations,
+                bel_model,
+                bel_annotations,
+                cd_element_to_bel_element,
+                normalized_namespace_and_identifier_to_label,
+            )
+        bel_reaction.abundance = bel_abundance
+        cd_reactant_compartment = cd_reactant_species.compartment
+        bel_from_namespace, bel_from_identifier = (
+            _get_bel_namespace_and_identifier_from_cd_compartment(
+                cd_reactant_compartment,
+                cd_annotations,
+                normalized_namespace_and_identifier_to_label,
+            )
+        )
+        bel_reaction.from_namespace = bel_from_namespace
+        bel_reaction.from_identifier = bel_from_identifier
+        cd_product_species = cd_product.referred_species
+        cd_product_compartment = cd_product_species.compartment
+        bel_to_namespace, bel_to_identifier = (
+            _get_bel_namespace_and_identifier_from_cd_compartment(
+                cd_product_compartment,
+                cd_annotations,
+                normalized_namespace_and_identifier_to_label,
+            )
+        )
+        bel_reaction.to_namespace = bel_to_namespace
+        bel_reaction.to_identifier = bel_to_identifier
     else:
         cd_reaction_cls = type(cd_reaction)
         bel_reaction_cls = CD_CLASS_TO_BEL_CLASS[cd_reaction_cls]
         bel_reaction = bel_model.new_element(bel_reaction_cls)
-        if isinstance(cd_reaction, momapy.celldesigner.core.Transport):
-            # reaction is a transport, we assume one reactant and one product
-            for cd_reactant in cd_reaction.reactants:
-                break
-            for cd_product in cd_reaction.products:
-                break
-            # we make an abundance from the reactant we found, whith no location
+        for cd_reactant in cd_reaction.reactants:
             cd_reactant_species = cd_reactant.referred_species
-            cd_species = dataclasses.replace(
-                cd_reactant_species, compartment=None
-            )
-            bel_abundance = cd_element_to_bel_element.get(cd_species)
-            if bel_abundance is None:
-                bel_abundance = _make_and_add_bel_abundance_from_cd_species(
-                    cd_species,
-                    cd_annotations,
-                    bel_model,
-                    bel_annotations,
-                    cd_element_to_bel_element,
-                    normalized_namespace_and_identifier_to_label,
-                )
-            bel_reaction.abundance = bel_abundance
-            cd_reactant_compartment = cd_reactant_species.compartment
-            bel_from_namespace, bel_from_identifier = (
-                _get_bel_namespace_and_identifier_from_cd_compartment(
-                    cd_reactant_compartment,
-                    cd_annotations,
-                    normalized_namespace_and_identifier_to_label,
-                )
-            )
-            bel_reaction.from_namespace = bel_from_namespace
-            bel_reaction.from_identifier = bel_from_identifier
+            bel_reactant = cd_element_to_bel_element[cd_reactant_species]
+            bel_reaction.reactants.add(bel_reactant)
+        for cd_product in cd_reaction.products:
             cd_product_species = cd_product.referred_species
-            cd_product_compartment = cd_product_species.compartment
-            bel_to_namespace, bel_to_identifier = (
-                _get_bel_namespace_and_identifier_from_cd_compartment(
-                    cd_product_compartment,
-                    cd_annotations,
-                    normalized_namespace_and_identifier_to_label,
-                )
-            )
-            bel_reaction.to_namespace = bel_to_namespace
-            bel_reaction.to_identifier = bel_to_identifier
-        else:
-            for cd_reactant in cd_reaction.reactants:
-                cd_reactant_species = cd_reactant.referred_species
-                bel_reactant = cd_element_to_bel_element[cd_reactant_species]
-                bel_reaction.reactants.add(bel_reactant)
-            for cd_product in cd_reaction.products:
-                cd_product_species = cd_product.referred_species
-                bel_product = cd_element_to_bel_element[cd_product_species]
-                bel_reaction.products.add(bel_product)
+            bel_product = cd_element_to_bel_element[cd_product_species]
+            bel_reaction.products.add(bel_product)
     bel_reaction = momapy.builder.object_from_builder(bel_reaction)
     bel_model.statements.add(bel_reaction)
     cd_element_to_bel_element[cd_reaction] = bel_reaction
