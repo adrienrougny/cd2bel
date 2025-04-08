@@ -568,7 +568,8 @@ def _make_and_add_bel_modification_from_cd_modification(
         match = _CD_RESIDUE_NAME_RE.fullmatch(cd_modification.residue.name)
         if match:
             bel_modification.amino_acid = match.group(1)
-            bel_modification.residue = match.group(2)
+            if match.group(2):
+                bel_modification.residue = match.group(2)
         bel_modification = momapy.builder.object_from_builder(bel_modification)
     super_bel_element.modifications.append(bel_modification)
     return bel_modification
