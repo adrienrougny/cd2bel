@@ -1,4 +1,5 @@
 import collections
+import re
 
 import momapy_bel.core
 import momapy_bel.io.bel
@@ -153,6 +154,55 @@ NORMALIZED_NAMESPACE_TO_BEL_AS = {
     "wikipathways": ".*",
     "wikipedia.en": ".*",
 }
+
+AA_3_CODE = [
+    "Ala",
+    "Arg",
+    "Asn",
+    "Asp",
+    "Cys",
+    "Gln",
+    "Glu",
+    "Gly",
+    "His",
+    "Ile",
+    "Leu",
+    "Lys",
+    "Met",
+    "Phe",
+    "Pro",
+    "Ser",
+    "Thr",
+    "Trp",
+    "Tyr",
+    "Val",
+]
+
+AA_1_CODE = [
+    "A",
+    "R",
+    "N",
+    "D",
+    "C",
+    "Q",
+    "E",
+    "G",
+    "H",
+    "I",
+    "L",
+    "K",
+    "M",
+    "F",
+    "P",
+    "S",
+    "T",
+    "W",
+    "Y",
+    "V",
+]
+_CD_RESIDUE_NAME_RE = re.compile(
+    f"({'|'.join(AA_1_CODE + AA_3_CODE)})([0-9]*)"
+)
 
 CD_CLASS_TO_BEL_CLASS = {
     momapy.celldesigner.core.Degraded: momapy_bel.core.Abundance,
@@ -515,14 +565,11 @@ def _make_and_add_bel_modification_from_cd_modification(
         cd_modification.residue is not None
         and cd_modification.residue.name is not None
     ):
-        cd_residue = cd_modification.residue.name
-        if not cd_residue[0].isnumeric():
-            bel_modification.amino_acid = cd_residue[0]
-            bel_modification.residue = cd_residue[1:]
-        else:  # if the amino_acid is not specified, the residue is not specified
-            bel_modification.amino_acid = None
-            bel_modification.residue = None
-    bel_modification = momapy.builder.object_from_builder(bel_modification)
+        match = _CD_RESIDUE_NAME_RE.fullmatch(cd_modification.residue.name)
+        if match:
+            bel_modification.amino_acid = match.group(1)
+            bel_modification.residue = match.group(2)
+        bel_modification = momapy.builder.object_from_builder(bel_modification)
     super_bel_element.modifications.append(bel_modification)
     return bel_modification
 
